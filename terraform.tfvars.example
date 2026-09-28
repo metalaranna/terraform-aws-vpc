@@ -1,0 +1,16 @@
+# Copy to terraform.tfvars and edit. terraform.tfvars is git-ignored.
+region   = "us-east-1"
+name     = "myapp"
+vpc_cidr = "10.0.0.0/16"
+az_count = 2
+
+# NAT: one per AZ is more resilient, one shared NAT is cheaper
+enable_nat_gateway = true
+single_nat_gateway = false
+
+enable_flow_logs        = true
+flow_log_retention_days = 30
+
+tags = {
+  Environment = "dev"
+}
