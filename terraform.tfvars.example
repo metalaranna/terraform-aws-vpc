@@ -92,7 +92,7 @@ route_tables = {
   }
 }
 
-# transit_gateway_id = "tgw-0123456789abcdef0"  # only needed if any custom_routes use target_type = "tgw"
+# transit_gateway_id = "tgw-xxxxxxxxxx"  # only needed if any custom_routes use target_type = "tgw"
 
 tags = {
   Environment = "dev"
