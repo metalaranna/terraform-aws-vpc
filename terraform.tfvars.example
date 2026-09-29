@@ -1,15 +1,98 @@
 # Copy to terraform.tfvars and edit. terraform.tfvars is git-ignored.
+#
+# All CIDRs, AZs, and names below are placeholder EXAMPLE values —
+# replace them with your own network plan before applying.
+
 region   = "us-east-1"
 name     = "myapp"
 vpc_cidr = "10.0.0.0/16"
-az_count = 2
 
-# NAT: one per AZ is more resilient, one shared NAT is cheaper
+# Optional: associate one or more extra CIDR blocks with the VPC
+# (e.g. to grow into a second /22 for another environment later).
+# secondary_cidr_blocks = ["10.1.0.0/22"]
+
 enable_nat_gateway = true
-single_nat_gateway = false
+single_nat_gateway = false  # true = one shared NAT (cheaper); false = one per AZ (resilient)
 
 enable_flow_logs        = true
 flow_log_retention_days = 30
+
+# ---------------------------------------------------------------------------
+# Subnets: one entry per subnet. `route_table` must match a key below in
+# route_tables. Group subnets into as many or as few route tables as your
+# environment needs — one per tier (public/private), one per service, one
+# per team, etc. This example shows two tiers across two AZs, plus a
+# separate tier for a shared service that gets its own private route table.
+# ---------------------------------------------------------------------------
+subnets = {
+  "public-1" = {
+    name        = "myapp-public-1"
+    cidr        = "10.0.0.0/24"
+    az          = "us-east-1a"
+    type        = "public"
+    route_table = "public"
+  }
+  "public-2" = {
+    name        = "myapp-public-2"
+    cidr        = "10.0.1.0/24"
+    az          = "us-east-1b"
+    type        = "public"
+    route_table = "public"
+  }
+  "app-private-1" = {
+    name        = "myapp-app-private-1"
+    cidr        = "10.0.10.0/24"
+    az          = "us-east-1a"
+    type        = "private"
+    route_table = "app-private"
+  }
+  "app-private-2" = {
+    name        = "myapp-app-private-2"
+    cidr        = "10.0.11.0/24"
+    az          = "us-east-1b"
+    type        = "private"
+    route_table = "app-private"
+  }
+  "data-private-1" = {
+    name        = "myapp-data-private-1"
+    cidr        = "10.0.20.0/27"
+    az          = "us-east-1a"
+    type        = "private"
+    route_table = "data-private"
+  }
+  "data-private-2" = {
+    name        = "myapp-data-private-2"
+    cidr        = "10.0.20.32/27"
+    az          = "us-east-1b"
+    type        = "private"
+    route_table = "data-private"
+  }
+}
+
+# ---------------------------------------------------------------------------
+# Route tables: keys here are referenced by subnets[*].route_table above.
+# custom_routes is only needed if you route toward a Transit Gateway or
+# similar — set var.transit_gateway_id when you use target_type = "tgw".
+# ---------------------------------------------------------------------------
+route_tables = {
+  "public" = {
+    name = "myapp-public-rt"
+    type = "public"
+  }
+  "app-private" = {
+    name = "myapp-app-private-rt"
+    type = "private"
+    # custom_routes = [
+    #   { cidr = "10.99.0.0/16", target_type = "tgw" },
+    # ]
+  }
+  "data-private" = {
+    name = "myapp-data-private-rt"
+    type = "private"
+  }
+}
+
+# transit_gateway_id = "tgw-0123456789abcdef0"  # only needed if any custom_routes use target_type = "tgw"
 
 tags = {
   Environment = "dev"
